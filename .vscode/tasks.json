@@ -1,0 +1,26 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "g++",
+            "args": [
+                "-Iinc",
+                "-Llib",
+                "-o",
+                "BinaryTreeVisualisation/BinaryTree",
+                "src/BinaryTree.cpp",
+                "src/main.cpp",
+                "lib/libSDL2.dll.a",
+                "lib/libSDL2main.a"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$gcc"],
+            "detail": "Generated task by ChatGPT"
+        }
+    ]
+}
