@@ -34,30 +34,6 @@ public:
 };
 
 void BinaryTree::RenderNode(SDL_Renderer *renderer, Node *node, Node *parent){
-    if(parent == nullptr){
-        node->nodeRect.x = ((640 - node->nodeRect.w)/2);
-        node->nodeRect.y = ((480 - node->nodeRect.h)/2) - 200;
-    }
-    else{
-        node->nodeRect.y = parent->nodeRect.y + 50;
-        
-        int newXvalue = parent->nodeRect.x;
-        if (node->data > parent->data)
-        {
-            newXvalue += 50;
-            cout<<"Larger Value" << endl;
-        }
-        else{
-            newXvalue -= 50;
-            cout<<"Smaller Value" << endl;
-        }
-        
-        
-        
-        node->nodeRect.x = newXvalue;
-    }
-
-
     string dataString = to_string(node->data);
     SDL_SetRenderDrawColor(renderer, 255,50,0,255);
     SDL_RenderDrawRect(renderer, &node->nodeRect);
@@ -77,8 +53,11 @@ void BinaryTree::insert(int item) {
     p->right = nullptr;
     p->nodeRect.w = 30;
     p->nodeRect.h = 30;
-
-    if (isEmpty()){root = p;}
+    if (isEmpty()){
+        root = p;
+        p->nodeRect.x = ((640 - p->nodeRect.w)/2);
+        p->nodeRect.y = ((480 - p->nodeRect.h)/2) - 200;
+        }
     else {
         Node *ptr;
         ptr = root;
@@ -89,10 +68,16 @@ void BinaryTree::insert(int item) {
             else
                 ptr = ptr->right;
         }
-        if (item < parent->data)
+        if (item < parent->data){
             parent->left=p;
-        else
+            p->nodeRect.y = parent->nodeRect.y + 50;
+            p->nodeRect.x = parent->nodeRect.x - 50;
+            }
+        else{
             parent->right=p;
+            p->nodeRect.y = parent->nodeRect.y + 50;
+            p->nodeRect.x = parent->nodeRect.x + 50;
+        }
     }
 }
 
