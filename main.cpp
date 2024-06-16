@@ -29,30 +29,42 @@ public:
     }
     void insert(int item    );
     void displayTree();
-    void printTree(Node *);
+    void printTree(Node *, Node *);
     void RenderNode(SDL_Renderer *renderer, Node *node, Node *parent);
 };
 
 void BinaryTree::RenderNode(SDL_Renderer *renderer, Node *node, Node *parent){
-    if (parent == nullptr)
-    {
+    if(parent == nullptr){
         node->nodeRect.x = ((640 - node->nodeRect.w)/2);
-        node->nodeRect.y = ((480 - node->nodeRect.h)/2);
+        node->nodeRect.y = ((480 - node->nodeRect.h)/2) - 200;
     }
-    
-    
+    else{
+        node->nodeRect.y = parent->nodeRect.y + 50;
+        
+        int newXvalue = parent->nodeRect.x;
+        if (node->data > parent->data)
+        {
+            newXvalue += 50;
+            cout<<"Larger Value" << endl;
+        }
+        else{
+            newXvalue -= 50;
+            cout<<"Smaller Value" << endl;
+        }
+        
+        
+        
+        node->nodeRect.x = newXvalue;
+    }
+
+
     string dataString = to_string(node->data);
-    cout << dataString <<endl;
-    cout << "Node pos set" << endl;
     SDL_SetRenderDrawColor(renderer, 255,50,0,255);
     SDL_RenderDrawRect(renderer, &node->nodeRect);
-    cout << "Drawn Rect" << endl;
     SDL_Surface *textSurface = TTF_RenderText_Solid(font, dataString.c_str(), {255,255,255});
     SDL_Texture *textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-    cout << "Font Surface done" << endl;
     SDL_FreeSurface(textSurface);
     SDL_RenderCopy(renderer, textTexture, NULL,&node->nodeRect);
-    cout << "Font Rendered" << endl;
     SDL_DestroyTexture(textTexture);
     cout << "Done" << endl;
 }
@@ -85,16 +97,14 @@ void BinaryTree::insert(int item) {
 }
 
 void BinaryTree::displayTree() {
-    printTree(root);
+    printTree(root, nullptr);
 }
 
-void BinaryTree::printTree(Node *ptr) {
-    Node* parent;
-    parent == nullptr;
+void BinaryTree::printTree(Node *ptr, Node *parent) {
     if (ptr!=nullptr) {
-        printTree(ptr->right);
+        printTree(ptr->right, ptr);
         RenderNode(renderer, ptr, parent);
-        printTree(ptr->left);
+        printTree(ptr->left, ptr);
     }
 }
 int IntizializeSDL(){
@@ -165,6 +175,16 @@ int main(int argc, char** args){
 
     BinaryTree tree = BinaryTree(font,renderer);
     tree.insert(10);
+    tree.insert(8);
+    tree.insert(76);
+    tree.insert(15);
+    tree.insert(2);
+    tree.insert(0);
+    tree.insert(99);
+    tree.insert(54);
+    tree.insert(16);
+    tree.insert(33);
+    tree.insert(89);
     tree.displayTree();
 
     SDL_RenderPresent(renderer);
