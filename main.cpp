@@ -11,6 +11,7 @@ struct Node {
     int data;
     Node *left;
     Node *right;
+    Node *parent;
     SDL_Rect nodeRect;
 };
 
@@ -18,9 +19,13 @@ class BinaryTree {
     Node *root;
     TTF_Font *font;
     SDL_Renderer *renderer;
+    Node *leftSubTreeRoot;
+    Node *rightSubTreeRoot;
 public:
     BinaryTree(TTF_Font *font,SDL_Renderer *renderer){
         root = nullptr;
+        leftSubTreeRoot = nullptr;
+        rightSubTreeRoot = nullptr;
         this->font = font;
         this->renderer = renderer;
     }
@@ -31,6 +36,8 @@ public:
     void displayTree();
     void printTree(Node *, Node *);
     void RenderNode(SDL_Renderer *renderer, Node *node, Node *parent);
+    void UpdateNodePosition(Node* p, Node* parent);
+    void UpdateAllNodesPosition(Node* p);
 };
 
 void BinaryTree::RenderNode(SDL_Renderer *renderer, Node *node, Node *parent){
@@ -42,7 +49,6 @@ void BinaryTree::RenderNode(SDL_Renderer *renderer, Node *node, Node *parent){
     SDL_FreeSurface(textSurface);
     SDL_RenderCopy(renderer, textTexture, NULL,&node->nodeRect);
     SDL_DestroyTexture(textTexture);
-    cout << "Done" << endl;
 }
 
 void BinaryTree::insert(int item) {
@@ -51,6 +57,7 @@ void BinaryTree::insert(int item) {
     p->data=item;
     p->left = nullptr;
     p->right = nullptr;
+    p->parent = nullptr;
     p->nodeRect.w = 30;
     p->nodeRect.h = 30;
     if (isEmpty()){
@@ -69,19 +76,68 @@ void BinaryTree::insert(int item) {
                 ptr = ptr->right;
         }
         if (item < parent->data){
+            if (leftSubTreeRoot == nullptr)
+            {
+                leftSubTreeRoot = p;
+            }
             parent->left=p;
-            p->nodeRect.y = parent->nodeRect.y + 50;
-            p->nodeRect.x = parent->nodeRect.x - 50;
+            p->parent = parent;
+            UpdateNodePosition(p, parent);
             }
         else{
+            if (rightSubTreeRoot == nullptr)
+            {
+                rightSubTreeRoot = p;
+            }
             parent->right=p;
-            p->nodeRect.y = parent->nodeRect.y + 50;
-            p->nodeRect.x = parent->nodeRect.x + 50;
+            p->parent = parent;
+            UpdateNodePosition(p, parent); 
         }
     }
+    //UpdateAllNodesPosition(parent);
 }
 
+void BinaryTree::UpdateNodePosition(Node* p, Node* parent){
+    p->nodeRect.y = parent->nodeRect.y + 50;
+
+    if (parent->parent != nullptr)
+    {
+        if (parent->parent->left != nullptr && parent->parent->left != parent)
+        {
+            cout <<"Adjusting right"<<endl;
+            parent->nodeRect.x += 50;
+        }
+        else if(parent->parent->right != nullptr && parent->parent->right != parent){
+            cout <<"Adjusting left"<<endl;
+            parent->nodeRect.x -= 50;
+        }
+        
+    }
+    if (p == parent->right)
+    {
+        p->nodeRect.x = parent->nodeRect.x + 30;
+    }
+    else{
+        p->nodeRect.x = parent->nodeRect.x - 30;
+    }   
+}
+
+void BinaryTree::UpdateAllNodesPosition(Node* p){
+    if(p!=nullptr){
+        if (p->left != nullptr)
+        {
+            UpdateNodePosition(p->left, p);
+            UpdateAllNodesPosition(p->left);
+        }
+        if(p->right != nullptr){
+            UpdateNodePosition(p->right, p);
+            UpdateAllNodesPosition(p->right);
+        }
+        
+    }
+}
 void BinaryTree::displayTree() {
+    UpdateAllNodesPosition(root);
     printTree(root, nullptr);
 }
 
@@ -120,6 +176,14 @@ void EventLoop(SDL_Event e, SDL_Window *window, SDL_Renderer *renderer, TTF_Font
     TTF_CloseFont(font);
     SDL_Quit;
 }
+
+void AddRandomNodes(BinaryTree binTree, int desiredNodes){
+    for(int i = 0; i <= desiredNodes; i++){
+        int randomInt = rand() % 100;
+        binTree.insert(randomInt);
+    }
+}
+
 int main(int argc, char** args){
     cout << "Hello" << endl;
     SDL_Window *window = NULL;
@@ -159,17 +223,21 @@ int main(int argc, char** args){
     }
 
     BinaryTree tree = BinaryTree(font,renderer);
-    tree.insert(10);
-    tree.insert(8);
-    tree.insert(76);
-    tree.insert(15);
-    tree.insert(2);
-    tree.insert(0);
-    tree.insert(99);
-    tree.insert(54);
-    tree.insert(16);
-    tree.insert(33);
-    tree.insert(89);
+    tree.insert(50);
+    // tree.insert(10);
+    // tree.insert(49);
+    // tree.insert(100);
+    // tree.insert(90);
+    // tree.insert(110);
+    // tree.insert(95);
+    // tree.insert(105);
+    // tree.insert(150);
+    // tree.insert(9);
+    // tree.insert(25);
+    // tree.insert(108);
+    // tree.insert(135);
+    AddRandomNodes(tree, 15);
+
     tree.displayTree();
 
     SDL_RenderPresent(renderer);
