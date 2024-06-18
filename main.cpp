@@ -93,11 +93,13 @@ void BinaryTree::insert(int item) {
         if (item < parent->data){
             parent->left=p;
             p->parent = parent;
+            p->level = parent->level + 1;
             UpdateNodePositionsFrom(p, parent);
             }
         else{
             parent->right=p;
             p->parent = parent;
+            p->level = parent->level + 1;
             UpdateNodePositionsFrom(p, parent);
         }
     }
@@ -106,30 +108,28 @@ void BinaryTree::insert(int item) {
 
 void BinaryTree::GetSpacingForNode(Node* p){
     if (p == nullptr)return;
+    
     if (p == root){
         GetSpacingForNode(p->left);
         GetSpacingForNode(p->right);
         return;
     }
     Node* ptr = p;
-    bool isLeftNode = p->data < root->data;
+    bool isLeftNode = p->data < p->parent->data;
     if (isLeftNode)
     {
-
         while (ptr != nullptr)
         {
-            cout << "Moving Right from: " << p->data << endl;
-            p->horizontalSpacing += 35;
+            p->horizontalSpacing += p->horizontalSpacing / (2 * p->level);
             ptr = ptr->right;
-        }
-        
-        
+        } 
     }
     else{
-        p->horizontalSpacing += 35;
-        cout << "Moving Left from: "<< p->data << endl;
+
+        while (ptr != nullptr){
+        p->horizontalSpacing += p->horizontalSpacing / (2 * p->level);
         ptr = ptr->left;
-        
+        }     
     }
     UpdateNodePositionsFrom(p, p->parent);  
 }
@@ -159,6 +159,7 @@ void BinaryTree::UpdateNodePositionsFrom(Node* p, Node* parent){
 }
 
 void BinaryTree::displayTree() {
+    root->horizontalSpacing = 0;
     GetAllNodeSpacing(root);
     printTree(root, nullptr);
 }
