@@ -9,6 +9,12 @@ using namespace std;
 
 struct Node {
     int data;
+    int horizontalSpacing = 30;
+    int rightSpacing = 0;
+    int leftSpacing = 0;
+    int cumulativeRightSpacing = 0;
+    int cumulativeLeftSpacing = 0;
+    int level = 1;
     Node *left;
     Node *right;
     Node *parent;
@@ -19,13 +25,12 @@ class BinaryTree {
     Node *root;
     TTF_Font *font;
     SDL_Renderer *renderer;
-    Node *leftSubTreeRoot;
-    Node *rightSubTreeRoot;
+    int totalNodes = 0;
+    int levelSpacing = 50;
+    int totalDepth = 0;
 public:
     BinaryTree(TTF_Font *font,SDL_Renderer *renderer){
         root = nullptr;
-        leftSubTreeRoot = nullptr;
-        rightSubTreeRoot = nullptr;
         this->font = font;
         this->renderer = renderer;
     }
@@ -36,14 +41,21 @@ public:
     void displayTree();
     void printTree(Node *, Node *);
     void RenderNode(SDL_Renderer *renderer, Node *node, Node *parent);
-    void UpdateNodePosition(Node* p, Node* parent);
-    void UpdateAllNodesPosition(Node* p);
+    void UpdateNodePositionsFrom(Node* p, Node* parent);
+    void GetSpacingForNode(Node* p);
+    void GetAllNodeSpacing(Node *ptr);
+    bool IsAPowerofTwo(int x);
 };
 
 void BinaryTree::RenderNode(SDL_Renderer *renderer, Node *node, Node *parent){
     string dataString = to_string(node->data);
     SDL_SetRenderDrawColor(renderer, 255,50,0,255);
     SDL_RenderDrawRect(renderer, &node->nodeRect);
+    SDL_SetRenderDrawColor(renderer, 255,255,255,255);
+    if (node->parent != nullptr)
+    {
+        SDL_RenderDrawLine(renderer, node->nodeRect.x + node->nodeRect.w/2, node->nodeRect.y, parent->nodeRect.x + parent->nodeRect.w/2, parent->nodeRect.y + parent->nodeRect.h);
+    }
     SDL_Surface *textSurface = TTF_RenderText_Solid(font, dataString.c_str(), {255,255,255});
     SDL_Texture *textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
     SDL_FreeSurface(textSurface);
@@ -62,82 +74,92 @@ void BinaryTree::insert(int item) {
     p->nodeRect.h = 30;
     if (isEmpty()){
         root = p;
-        p->nodeRect.x = ((640 - p->nodeRect.w)/2);
-        p->nodeRect.y = ((480 - p->nodeRect.h)/2) - 200;
+        p->nodeRect.x = ((1280 - p->nodeRect.w)/2);
+        p->nodeRect.y = ((720 - p->nodeRect.h)/2) - 300;
         }
     else {
         Node *ptr;
         ptr = root;
         while (ptr!=nullptr) {
             parent = ptr;
-            if (item < ptr->data)
+            if (item < ptr->data){
                 ptr = ptr->left;
+                p->level++;
+            }
             else
                 ptr = ptr->right;
+                p->level++;
         }
         if (item < parent->data){
-            if (leftSubTreeRoot == nullptr)
-            {
-                leftSubTreeRoot = p;
-            }
             parent->left=p;
             p->parent = parent;
-            UpdateNodePosition(p, parent);
+            UpdateNodePositionsFrom(p, parent);
             }
         else{
-            if (rightSubTreeRoot == nullptr)
-            {
-                rightSubTreeRoot = p;
-            }
             parent->right=p;
             p->parent = parent;
-            UpdateNodePosition(p, parent); 
+            UpdateNodePositionsFrom(p, parent);
         }
     }
-    //UpdateAllNodesPosition(parent);
 }
 
-void BinaryTree::UpdateNodePosition(Node* p, Node* parent){
-    p->nodeRect.y = parent->nodeRect.y + 50;
 
-    if (parent->parent != nullptr)
+void BinaryTree::GetSpacingForNode(Node* p){
+    if (p == nullptr)return;
+    if (p == root){
+        GetSpacingForNode(p->left);
+        GetSpacingForNode(p->right);
+        return;
+    }
+    Node* ptr = p;
+    bool isLeftNode = p->data < root->data;
+    if (isLeftNode)
     {
-        if (parent->parent->left != nullptr && parent->parent->left != parent)
+
+        while (ptr != nullptr)
         {
-            cout <<"Adjusting right"<<endl;
-            parent->nodeRect.x += 50;
-        }
-        else if(parent->parent->right != nullptr && parent->parent->right != parent){
-            cout <<"Adjusting left"<<endl;
-            parent->nodeRect.x -= 50;
+            cout << "Moving Right from: " << p->data << endl;
+            p->horizontalSpacing += 35;
+            ptr = ptr->right;
         }
         
-    }
-    if (p == parent->right)
-    {
-        p->nodeRect.x = parent->nodeRect.x + 30;
+        
     }
     else{
-        p->nodeRect.x = parent->nodeRect.x - 30;
-    }   
-}
-
-void BinaryTree::UpdateAllNodesPosition(Node* p){
-    if(p!=nullptr){
-        if (p->left != nullptr)
-        {
-            UpdateNodePosition(p->left, p);
-            UpdateAllNodesPosition(p->left);
-        }
-        if(p->right != nullptr){
-            UpdateNodePosition(p->right, p);
-            UpdateAllNodesPosition(p->right);
-        }
+        p->horizontalSpacing += 35;
+        cout << "Moving Left from: "<< p->data << endl;
+        ptr = ptr->left;
         
     }
+    UpdateNodePositionsFrom(p, p->parent);  
 }
+
+void BinaryTree::UpdateNodePositionsFrom(Node* p, Node* parent){
+    if (p == nullptr)
+    {
+        return;
+    }
+    p->nodeRect.y = parent->nodeRect.y + 50;
+    if (p == parent->right)
+    {
+        p->nodeRect.x = parent->nodeRect.x + p->horizontalSpacing;
+    }
+    else{
+        p->nodeRect.x = parent->nodeRect.x - p->horizontalSpacing;
+    }
+
+    if (p->right != nullptr)
+    {
+        UpdateNodePositionsFrom(p->right, p);      
+    }
+    if (p->left != nullptr)
+    {
+        UpdateNodePositionsFrom(p->left, p);      
+    }
+}
+
 void BinaryTree::displayTree() {
-    UpdateAllNodesPosition(root);
+    GetAllNodeSpacing(root);
     printTree(root, nullptr);
 }
 
@@ -147,6 +169,18 @@ void BinaryTree::printTree(Node *ptr, Node *parent) {
         RenderNode(renderer, ptr, parent);
         printTree(ptr->left, ptr);
     }
+}
+
+void BinaryTree::GetAllNodeSpacing(Node *ptr) {
+    if (ptr!=nullptr) {
+        GetAllNodeSpacing(ptr->right);
+        GetSpacingForNode(ptr);
+        GetAllNodeSpacing(ptr->left);
+    }
+}
+
+bool BinaryTree::IsAPowerofTwo(int x){
+    return (x != 0) && ((x & (x - 1)) == 0);
 }
 int IntizializeSDL(){
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0){
@@ -196,13 +230,15 @@ int main(int argc, char** args){
        return 1;
     }
     
-    window = SDL_CreateWindow("Test Window", SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,640,480, SDL_WINDOW_SHOWN);
+    window = SDL_CreateWindow("Test Window", SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,1280,720, SDL_WINDOW_SHOWN);
 
     if(!window){
         cout << "Error Creating Window" << SDL_GetError() << endl;
         system("pause");
         return 1;
     }
+
+    SDL_SetWindowResizable(window, SDL_TRUE);
 
     renderer = SDL_CreateRenderer(window,0,0);
 
@@ -236,7 +272,7 @@ int main(int argc, char** args){
     // tree.insert(25);
     // tree.insert(108);
     // tree.insert(135);
-    AddRandomNodes(tree, 15);
+    AddRandomNodes(tree, 30);
 
     tree.displayTree();
 
@@ -244,6 +280,4 @@ int main(int argc, char** args){
 
     SDL_Event e;
     EventLoop(e, window,renderer,font);
-
-    
 }
