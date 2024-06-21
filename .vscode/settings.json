@@ -3,6 +3,7 @@
         "iostream": "cpp",
         "xmemory": "cpp",
         "xiosbase": "cpp",
-        "ostream": "cpp"
+        "ostream": "cpp",
+        "cmath": "cpp"
     }
 }

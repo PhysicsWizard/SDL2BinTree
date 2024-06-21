@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <cmath>
 #include "src/inc/SDL.h"
 #include "src/inc/SDL_ttf.h"
 
@@ -9,7 +10,7 @@ using namespace std;
 
 struct Node {
     int data;
-    int horizontalSpacing = 30;
+    int horizontalSpacing = 50;
     int rightSpacing = 0;
     int leftSpacing = 0;
     int cumulativeRightSpacing = 0;
@@ -103,6 +104,9 @@ void BinaryTree::insert(int item) {
             UpdateNodePositionsFrom(p, parent);
         }
     }
+    if ( p->level < totalDepth){
+        totalDepth = p->level;
+    }
 }
 
 
@@ -120,14 +124,14 @@ void BinaryTree::GetSpacingForNode(Node* p){
     {
         while (ptr != nullptr)
         {
-            p->horizontalSpacing += p->horizontalSpacing / (2 * p->level);
+            p->horizontalSpacing = 1280 / (pow(2,p->level));
             ptr = ptr->right;
         } 
     }
     else{
 
         while (ptr != nullptr){
-        p->horizontalSpacing += p->horizontalSpacing / (2 * p->level);
+        p->horizontalSpacing = 1280 / (pow(2,p->level));
         ptr = ptr->left;
         }     
     }
@@ -273,7 +277,7 @@ int main(int argc, char** args){
     // tree.insert(25);
     // tree.insert(108);
     // tree.insert(135);
-    AddRandomNodes(tree, 30);
+    AddRandomNodes(tree, 100);
 
     tree.displayTree();
 
