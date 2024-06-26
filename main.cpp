@@ -22,16 +22,18 @@ class BinaryTree {
     Node *root;
     TTF_Font *font;
     SDL_Renderer *renderer;
+    SDL_Window *window;
     int totalNodes = 0;
     int levelSpacing = 50;
     int totalDepth = 0;
 
 //Tree Class requires SDl Renderer and TTF font to be created (For visulaisation)
 public:
-    BinaryTree(TTF_Font *font,SDL_Renderer *renderer){
+    BinaryTree(TTF_Font *font,SDL_Renderer *renderer,SDL_Window *window){
         root = nullptr;
         this->font = font;
         this->renderer = renderer;
+        this->window = window;
     }
 
 
@@ -44,6 +46,7 @@ public:
     void RenderNode(SDL_Renderer *renderer, Node *node, Node *parent);
     int GetSubTreeWidth(Node* );
     void SetNodePositions(Node*, int, int);
+    bool Contains(int);
 };
 
 
@@ -143,9 +146,30 @@ void BinaryTree::insert(int item) {
     }
 }
 
+bool BinaryTree::Contains(int item){
+    Node* ptr;
+    ptr = root;
+
+    while(ptr != nullptr){
+        if (ptr->data == item)
+        {
+            return true;
+        }
+        if (item < ptr->data)
+        {
+            ptr = ptr->left;
+        }
+        else
+        {
+            ptr = ptr->right;
+        } 
+    } 
+    return false;
+}
+
 void BinaryTree::displayTree() {
     root->horizontalSpacing = 0;
-    int startX = 640;
+    int startX = (SDL_GetWindowSurface(window) -> w) /2;
     int startY = 100;
     SetNodePositions(root, startX,startY);
     printTree(root, nullptr);
@@ -171,7 +195,7 @@ int IntizializeSDL(){
     return 0;
 }
 
-void EventLoop(SDL_Event e, SDL_Window *window, SDL_Renderer *renderer, TTF_Font *font){
+void EventLoop(SDL_Event e, SDL_Window *window, SDL_Renderer *renderer, TTF_Font *font, BinaryTree tree){
     bool quit = false;
 
     while(!quit){
@@ -179,6 +203,17 @@ void EventLoop(SDL_Event e, SDL_Window *window, SDL_Renderer *renderer, TTF_Font
         {
             if(e.type == SDL_QUIT){
                 quit = true;
+            } 
+
+            else if (e.type == SDL_WINDOWEVENT){
+                if (e.window.event == SDL_WINDOWEVENT_RESIZED)
+                {
+                    SDL_SetRenderDrawColor(renderer, 0,0,0,255);
+
+                    tree.displayTree();
+                    SDL_RenderPresent(renderer);
+                }
+                
             }
         }  
     }
@@ -189,8 +224,12 @@ void EventLoop(SDL_Event e, SDL_Window *window, SDL_Renderer *renderer, TTF_Font
 }
 
 void AddRandomNodes(BinaryTree binTree, int desiredNodes){
-    for(int i = 0; i <= desiredNodes; i++){
+    for(int i = 1; i <= desiredNodes; i++){
         int randomInt = rand() % 100;
+        while (binTree.Contains(randomInt))
+        {
+            randomInt = rand() % 100;
+        }
         binTree.insert(randomInt);
     }
 }
@@ -235,15 +274,17 @@ int main(int argc, char** args){
         return 1;
     }
 
-    BinaryTree tree = BinaryTree(font,renderer);
-    // tree.insert(50);
-    tree.insert(10);
-    AddRandomNodes(tree, 50);
+    BinaryTree tree = BinaryTree(font,renderer, window);
+    tree.insert(rand() % 100);
+    AddRandomNodes(tree,20);
+
+    cout <<"Tree Contains 30: " << tree.Contains(30) << endl;
+    cout <<"Tree Contains 15: " << tree.Contains(15) << endl;
 
     tree.displayTree();
 
     SDL_RenderPresent(renderer);
 
     SDL_Event e;
-    EventLoop(e, window,renderer,font);
+    EventLoop(e, window,renderer,font,tree);
 }
