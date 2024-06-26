@@ -10,7 +10,7 @@ using namespace std;
 
 struct Node {
     int data;
-    int horizontalSpacing = 50;
+    int horizontalSpacing = 10;
     int rightSpacing = 0;
     int leftSpacing = 0;
     int cumulativeRightSpacing = 0;
@@ -46,7 +46,39 @@ public:
     void GetSpacingForNode(Node* p);
     void GetAllNodeSpacing(Node *ptr);
     bool IsAPowerofTwo(int x);
+    int GetSubTreeWidth(Node* );
+    void SetNodePositions(Node*, int, int);
 };
+
+int BinaryTree::GetSubTreeWidth(Node* p){
+    if(p == nullptr)return 0;
+
+    int leftWidth = GetSubTreeWidth(p->left);
+    int rightWidth = GetSubTreeWidth(p->right);
+
+    return leftWidth + rightWidth + 1;
+}
+
+void BinaryTree::SetNodePositions(Node*p, int x, int y){
+    if (p == nullptr) return;
+    int subTreeWidth = GetSubTreeWidth(p);
+    int offset = subTreeWidth * 10;
+
+
+    p->nodeRect.x = x;
+    p->nodeRect.y = y;
+
+    if (p->left != nullptr)
+    {
+        SetNodePositions(p->left, x - offset, y + levelSpacing);
+    }
+
+    if (p->right != nullptr)
+    {
+        SetNodePositions(p->right, x + offset, y + levelSpacing);
+    }
+    
+}
 
 void BinaryTree::RenderNode(SDL_Renderer *renderer, Node *node, Node *parent){
     string dataString = to_string(node->data);
@@ -109,33 +141,25 @@ void BinaryTree::insert(int item) {
     }
 }
 
-
 void BinaryTree::GetSpacingForNode(Node* p){
     if (p == nullptr)return;
-    
-    if (p == root){
-        GetSpacingForNode(p->left);
-        GetSpacingForNode(p->right);
-        return;
-    }
-    Node* ptr = p;
-    bool isLeftNode = p->data < p->parent->data;
-    if (isLeftNode)
-    {
-        while (ptr != nullptr)
-        {
-            p->horizontalSpacing = 1280 / (pow(2,p->level));
-            ptr = ptr->right;
-        } 
-    }
-    else{
 
-        while (ptr != nullptr){
-        p->horizontalSpacing = 1280 / (pow(2,p->level));
-        ptr = ptr->left;
-        }     
+    int baseSpacing = 100;
+    int leftSubTreeWidth = GetSubTreeWidth(p->left);
+    int rightSubTreeWidth = GetSubTreeWidth(p->right);
+
+
+    p->horizontalSpacing = baseSpacing + (leftSubTreeWidth + rightSubTreeWidth);
+    if (p->left != nullptr)
+    {
+        GetSpacingForNode(p->left);
     }
-    UpdateNodePositionsFrom(p, p->parent);  
+    if(p->right != nullptr){
+        GetSpacingForNode(p->right);
+    }
+    if(p->parent != nullptr){
+        UpdateNodePositionsFrom(p, p->parent);
+    }  
 }
 
 void BinaryTree::UpdateNodePositionsFrom(Node* p, Node* parent){
@@ -143,13 +167,18 @@ void BinaryTree::UpdateNodePositionsFrom(Node* p, Node* parent){
     {
         return;
     }
-    p->nodeRect.y = parent->nodeRect.y + 50;
+
+    int leftSubTreeWidth = GetSubTreeWidth(p->left);
+    int rightSubTreeWidth = GetSubTreeWidth(p->right);
+
+
+    p->nodeRect.y = parent->nodeRect.y + 30;
     if (p == parent->right)
     {
-        p->nodeRect.x = parent->nodeRect.x + p->horizontalSpacing;
+        p->nodeRect.x = parent->nodeRect.x + leftSubTreeWidth + p->horizontalSpacing;
     }
     else{
-        p->nodeRect.x = parent->nodeRect.x - p->horizontalSpacing;
+        p->nodeRect.x = parent->nodeRect.x - rightSubTreeWidth - p->horizontalSpacing;
     }
 
     if (p->right != nullptr)
@@ -164,7 +193,9 @@ void BinaryTree::UpdateNodePositionsFrom(Node* p, Node* parent){
 
 void BinaryTree::displayTree() {
     root->horizontalSpacing = 0;
-    GetAllNodeSpacing(root);
+    int startX = 640;
+    int startY = 100;
+    SetNodePositions(root, startX,startY);
     printTree(root, nullptr);
 }
 
@@ -182,10 +213,6 @@ void BinaryTree::GetAllNodeSpacing(Node *ptr) {
         GetSpacingForNode(ptr);
         GetAllNodeSpacing(ptr->left);
     }
-}
-
-bool BinaryTree::IsAPowerofTwo(int x){
-    return (x != 0) && ((x & (x - 1)) == 0);
 }
 int IntizializeSDL(){
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0){
@@ -265,19 +292,19 @@ int main(int argc, char** args){
 
     BinaryTree tree = BinaryTree(font,renderer);
     tree.insert(50);
-    // tree.insert(10);
-    // tree.insert(49);
-    // tree.insert(100);
-    // tree.insert(90);
-    // tree.insert(110);
-    // tree.insert(95);
-    // tree.insert(105);
-    // tree.insert(150);
-    // tree.insert(9);
-    // tree.insert(25);
-    // tree.insert(108);
-    // tree.insert(135);
-    AddRandomNodes(tree, 100);
+    tree.insert(10);
+    tree.insert(49);
+    tree.insert(100);
+    tree.insert(90);
+    tree.insert(110);
+    tree.insert(95);
+    tree.insert(105);
+    tree.insert(150);
+    tree.insert(9);
+    tree.insert(25);
+    tree.insert(108);
+    tree.insert(135);
+    //AddRandomNodes(tree, 100);
 
     tree.displayTree();
 
