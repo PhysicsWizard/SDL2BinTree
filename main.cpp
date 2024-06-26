@@ -246,7 +246,7 @@ int main(int argc, char** args){
        return 1;
     }
     
-    window = SDL_CreateWindow("Test Window", SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,1280,720, SDL_WINDOW_SHOWN);
+    window = SDL_CreateWindow("Binary Tree Visualiser", SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,1280,720, SDL_WINDOW_SHOWN);
 
     if(!window){
         cout << "Error Creating Window" << SDL_GetError() << endl;
@@ -277,14 +277,8 @@ int main(int argc, char** args){
     BinaryTree tree = BinaryTree(font,renderer, window);
     tree.insert(rand() % 100);
     AddRandomNodes(tree,20);
-
-    cout <<"Tree Contains 30: " << tree.Contains(30) << endl;
-    cout <<"Tree Contains 15: " << tree.Contains(15) << endl;
-
     tree.displayTree();
-
     SDL_RenderPresent(renderer);
-
     SDL_Event e;
     EventLoop(e, window,renderer,font,tree);
 }
