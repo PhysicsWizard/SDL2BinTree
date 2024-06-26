@@ -4,7 +4,9 @@ This project was undertaken to learn:
 2. C++
 3. SDL2 Library
 
-At this stage I am leaving the porject as is; it will generate 20 random nodes on launch and display them using SDL.
+At this stage I am leaving the project as is. 
+
+It will generate 20 random nodes on launch and display them using SDL.
 In future I would like to add user input functionality but I', shifting focus to other work.
 
 
