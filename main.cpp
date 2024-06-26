@@ -8,14 +8,10 @@
 #undef main
 using namespace std;
 
+//Nodes hold reference to their left and right child, their parent and the spacing they need to be placed.
 struct Node {
     int data;
     int horizontalSpacing = 10;
-    int rightSpacing = 0;
-    int leftSpacing = 0;
-    int cumulativeRightSpacing = 0;
-    int cumulativeLeftSpacing = 0;
-    int level = 1;
     Node *left;
     Node *right;
     Node *parent;
@@ -29,12 +25,16 @@ class BinaryTree {
     int totalNodes = 0;
     int levelSpacing = 50;
     int totalDepth = 0;
+
+//Tree Class requires SDl Renderer and TTF font to be created (For visulaisation)
 public:
     BinaryTree(TTF_Font *font,SDL_Renderer *renderer){
         root = nullptr;
         this->font = font;
         this->renderer = renderer;
     }
+
+
     int isEmpty() {
         return (root == nullptr);
     }
@@ -46,6 +46,8 @@ public:
     void SetNodePositions(Node*, int, int);
 };
 
+
+//Recursively gets the total width of a node's subtree.
 int BinaryTree::GetSubTreeWidth(Node* p){
     if(p == nullptr)return 0;
 
@@ -55,6 +57,7 @@ int BinaryTree::GetSubTreeWidth(Node* p){
     return leftWidth + rightWidth + 1;
 }
 
+//Using the nodes subtree width, creates an x offset to give the node's children. Recursively Sets the positions of each node from p. 
 void BinaryTree::SetNodePositions(Node*p, int x, int y){
     if (p == nullptr) return;
     int subTreeWidth = GetSubTreeWidth(p);
@@ -77,22 +80,31 @@ void BinaryTree::SetNodePositions(Node*p, int x, int y){
 }
 
 void BinaryTree::RenderNode(SDL_Renderer *renderer, Node *node, Node *parent){
+    
+    //Make data string, draw node in red; set render draw to white.
     string dataString = to_string(node->data);
     SDL_SetRenderDrawColor(renderer, 255,50,0,255);
     SDL_RenderDrawRect(renderer, &node->nodeRect);
     SDL_SetRenderDrawColor(renderer, 255,255,255,255);
+    
+    //Connect Node to parent
     if (node->parent != nullptr)
     {
         SDL_RenderDrawLine(renderer, node->nodeRect.x + node->nodeRect.w/2, node->nodeRect.y, parent->nodeRect.x + parent->nodeRect.w/2, parent->nodeRect.y + parent->nodeRect.h);
     }
+
+    //Draw text
     SDL_Surface *textSurface = TTF_RenderText_Solid(font, dataString.c_str(), {255,255,255});
     SDL_Texture *textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+
+    //Free Memory
     SDL_FreeSurface(textSurface);
     SDL_RenderCopy(renderer, textTexture, NULL,&node->nodeRect);
     SDL_DestroyTexture(textTexture);
 }
 
 void BinaryTree::insert(int item) {
+    //Setup inputed node.
     Node *p = new Node;
     Node *parent;
     p->data=item;
@@ -101,37 +113,33 @@ void BinaryTree::insert(int item) {
     p->parent = nullptr;
     p->nodeRect.w = 30;
     p->nodeRect.h = 30;
+
     if (isEmpty()){
         root = p;
-        p->nodeRect.x = ((1280 - p->nodeRect.w)/2);
-        p->nodeRect.y = ((720 - p->nodeRect.h)/2) - 300;
         }
+
+
     else {
         Node *ptr;
         ptr = root;
+
+        //Traverse Tree until reaching the bottom; set the correct references for parent node.
         while (ptr!=nullptr) {
             parent = ptr;
             if (item < ptr->data){
                 ptr = ptr->left;
-                p->level++;
             }
             else
                 ptr = ptr->right;
-                p->level++;
         }
         if (item < parent->data){
             parent->left=p;
             p->parent = parent;
-            p->level = parent->level + 1;
             }
         else{
             parent->right=p;
             p->parent = parent;
-            p->level = parent->level + 1;
         }
-    }
-    if ( p->level < totalDepth){
-        totalDepth = p->level;
     }
 }
 
@@ -188,10 +196,10 @@ void AddRandomNodes(BinaryTree binTree, int desiredNodes){
 }
 
 int main(int argc, char** args){
-    cout << "Hello" << endl;
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
 
+    //Setup SDL
     if (IntizializeSDL() != 0)
     {
        cout << "Error Initializing SDL" << endl;
@@ -219,8 +227,8 @@ int main(int argc, char** args){
     
     SDL_RenderClear(renderer);
     SDL_SetRenderDrawColor(renderer, 0,100,255,255);
-    
-    TTF_Font *font = TTF_OpenFont("src/SmallTypeWriting.ttf", 256);
+    //Import ttf Font
+    TTF_Font *font = TTF_OpenFont("src/SmallTypeWriting.ttf", 1028);
     if (font == nullptr)
     {
         cout << "Could not load font" << endl;
@@ -230,17 +238,6 @@ int main(int argc, char** args){
     BinaryTree tree = BinaryTree(font,renderer);
     // tree.insert(50);
     tree.insert(10);
-    // tree.insert(49);
-    // tree.insert(100);
-    // tree.insert(90);
-    // tree.insert(110);
-    // tree.insert(95);
-    // tree.insert(105);
-    // tree.insert(150);
-    // tree.insert(9);
-    // tree.insert(25);
-    // tree.insert(108);
-    // tree.insert(135);
     AddRandomNodes(tree, 50);
 
     tree.displayTree();
